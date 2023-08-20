@@ -16,15 +16,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
-import java.util.List;
 import java.util.stream.Stream;
 
 import static java.lang.System.lineSeparator;
 import static java.util.UUID.randomUUID;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 import static org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags.CAST5;
 import static org.bouncycastle.openpgp.PGPLiteralData.UTF8;
@@ -47,7 +46,7 @@ public final class JPGP2FA {
             File secretFile = createTempSecretFile(secret);
             try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
                 writeFileToOutputStream(bos, secretFile, pubKey);
-                return bos.toString("UTF-8").replaceAll(lineSeparator() + "Version: .+" + lineSeparator(), "");
+                return bos.toString(StandardCharsets.UTF_8).replaceAll(lineSeparator() + "Version: .+" + lineSeparator(), "");
             }
         } catch (IOException | PGPException e) {
             throw new JPGP2FAException(e);
@@ -82,9 +81,6 @@ public final class JPGP2FA {
 
     private static PGPPublicKey readPublicKey(InputStream input) throws IOException, PGPException, JPGP2FAException {
         PGPPublicKeyRingCollection pgpPub = new PGPPublicKeyRingCollection(getDecoderStream(input), new JcaKeyFingerprintCalculator());
-
-        List<PGPPublicKey> foo = asStream(pgpPub.getKeyRings())
-                .flatMap(keyRing -> asStream(keyRing.getPublicKeys())).collect(toList());
 
         return asStream(pgpPub.getKeyRings())
                 .flatMap(keyRing -> asStream(keyRing.getPublicKeys()))
